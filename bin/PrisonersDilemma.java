@@ -8,14 +8,13 @@ public class PrisonersDilemma
 	// Formatter
     public static final DecimalFormat df = new DecimalFormat("+#.##%;-#.##%");
 
-
     // Declare parameters and constants
     public static final double pc = 0.9;                // Probability of crossover
     public static double pm = 0.005;                    // Probability of mutation 
     public static final int population = 20;           // Population size (represents number of players) (must be even)
     public static final int chromosomes = 71;          // Chromosome length (number of possible game histories)
     public static final int generations = 10000;         // Number of generations
-    public static final int elite = (int)(0.5 * population); // Percentage of solutions to clone
+    public static final int elite = (int)(0.05 * population); // Percentage of solutions to clone
 	public static final int rounds = population-1;      //number of rounds that each player plays in a generation
 	public static final int movesTotal = 100;           //each round contains 100 moves (each move == cooperate/defect)
 
@@ -27,6 +26,256 @@ public class PrisonersDilemma
 	//start main method
 	public static void main(String[] args)
     {
+		// Open output files
+        PrintWriter outputFile = null;
+        try
+        {
+            outputFile = new PrintWriter(new FileOutputStream("Prisoners.txt",false));
+        }
+        catch(FileNotFoundException e)
+        {
+            System.out.println("File error.  Program aborted.");
+            System.exit(0);
+        }
+
+        PrintWriter currentBestAsList = null;
+        try
+        {
+            currentBestAsList = new PrintWriter(new FileOutputStream("CurrentBestAsList.txt",false));
+        }
+        catch(FileNotFoundException e)
+        {
+            System.out.println("File error.  Program aborted.");
+            System.exit(0);
+        }
+
+        PrintWriter currentBestAsArray = null;
+        try
+        {
+            currentBestAsArray = new PrintWriter(new FileOutputStream("CurrentBestAsArray.txt",false));
+        }
+        catch(FileNotFoundException e)
+        {
+            System.out.println("File error.  Program aborted.");
+            System.exit(0);
+        }
+
+        // Initialize population randomly
+        for (int i = 0; i < population; i++)
+        {
+            for (int j = 0; j < chromosomes; j++)
+            {
+                double bit = Math.random();
+                if (bit < 0.5)
+                    solutions[i][j] = 0;
+                else
+                    solutions[i][j] = 1;
+            }
+			score[i] = 0;
+            fitness[i] = 0.;
+        }
+
+        // Output
+        System.out.println("Generation 0");
+        for (int i = 0; i < population; i++)
+		{
+            printChromosome(solutions, i);
+        }
+		
+        // Evaluate initial fitness
+        fitness();
+		
+        // Keep track of best solutions in a given generation
+        int[] best = new int[elite];
+        for (int i = 0; i < elite; i++)
+		{
+            best[i] = 0;
+		}
+
+        // Start generation loop
+        for (int i = 1; i < generations; i++)
+        {
+            // Worst fitness in current generation
+            double minFitness = 1.;
+            for (int k = 0; k < population; k++)
+            {
+                if (fitness[k] < minFitness)
+                    minFitness = fitness[k];
+            }
+            //System.out.println("Min fitness = " + df.format(minFitness));
+
+            // Temporary memory allocation for next generation
+            int[][] tmp = new int[population][chromosomes];
+
+            // Create new population
+            int count = 0;
+            while (count < population)
+            {
+                // Selection by roulette wheel
+                int[] parents = rouletteWheel(Math.min(minFitness, -1.));
+                //printChromosome(solutions,parents[0]);
+                //printChromosome(solutions,parents[1]);
+
+                // Two-point crossover
+                if (Math.random() < pc)
+                {
+                    for (int j = 0 ; j<chromosomes; j++)
+                    {
+                        tmp[count][j] = solutions[parents[0]][j];
+                        tmp[count+1][j] = solutions[parents[1]][j];
+                    }
+
+                    int point1 = (int)(Math.random()*chromosomes);
+                    int point2 = (int)(Math.random()*chromosomes);
+
+                    if (point2 < point1)
+                    {
+                        int temp = point1;
+                        point1 = point2;
+                        point2 = temp;
+                    }
+
+                    if (point1 != point2)
+                    {
+                        for (int w=point1; w<=point2; w++)
+                        {
+                            tmp[count+1][w] = solutions[parents[0]][w];
+                            tmp[count][w] = solutions[parents[1]][w];
+                        }
+                    }
+
+                    else
+                    {
+                        tmp[count+1][point1] = solutions[parents[0]][point1];
+                        tmp[count][point1] = solutions[parents[1]][point1];
+                    }
+
+                }
+				
+                else
+                {
+                    for (int j = 0 ; j<chromosomes; j++)
+                    {
+                        tmp[count][j] = solutions[parents[0]][j];
+                        tmp[count+1][j] = solutions[parents[1]][j];
+                    }
+                }
+				
+
+                // Mutation
+                for (int j = 0; j<chromosomes; j++)
+                {
+                    if (Math.random() <= pm)
+                    {
+                        tmp[count][j] = (int) (Math.random()*2);
+                    }
+
+                    if (Math.random() <= pm)
+                    {
+                        tmp[count+1][j] = (int) (Math.random()*2);
+                    }
+                }
+
+                // Advance count by 2 as we have added two children i.e. two new
+                // rows in tmp[][].
+                count = count + 2;
+            }
+
+
+            // Copy tmp to solutions
+            for (int j = 0; j < population; j++)
+            {
+                if (fitness[j] < fitness[best[elite-1]]) // Keep elites
+                {
+                    System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
+                }
+            }
+
+
+            // Update objective function
+            fitness();
+
+
+            // Calculate average fitness of population and output
+            double sumScore = 0.0;
+			double maxScoreGen = population * rounds * movesTotal * 3.0 //maximum collective score in a generation
+			
+			//***note*** (max collective score) is not equal to (max individual score)*population
+			//because everyone cannot get 5pts at each move. If a player gets 5, his opponent has 0.
+			//the max collective score would result in each person obtaining 3 at each move (cooperation+cooperation)
+			
+            for (int j = 0; j < population; j++){
+                sumScore += score[j];
+            }
+
+            double avgFitness = sumScore / maxScoreGen;
+
+            // Find elite solutions and output best
+            double maxFitness = -1e3;
+            for (int j = 0; j < population; j++)
+            {
+                if (fitness[j] > maxFitness)
+                {
+                    maxFitness = fitness[j];
+                    best[0] = j;
+                }
+            }
+            for (int getBest = 1; getBest < elite; getBest++)
+            {
+                maxFitness = -1e3;
+                for (int j = 0; j < population; j++)
+                {
+                    if (fitness[j] > maxFitness && fitness[j] < fitness[best[getBest-1]])
+                    {
+                        maxFitness = fitness[j];
+                        best[getBest] = j;
+                    }
+                }
+            }
+
+
+            // Output
+            if (i%10==0)
+            {
+                System.out.println();
+                System.out.println("Generation " + i);
+                System.out.println("Avg fitness = " + df.format(avgFitness));
+                System.out.println("Max fitness = " + df.format(fitness[best[0]]));
+                System.out.println("Elites:");
+                for (int print = 0; print < elite; print ++)
+                {
+                    System.out.println(best[print] + "\t" + df.format(fitness[best[print]]));
+                }
+
+                outputFile.printf("%d\t%1.6e\t%1.6e\r\n",i,avgFitness,fitness[best[0]]);
+                currentBestAsList.printf("{");
+                for(int p = 0; p < chromosomes; p++)
+                    currentBestAsList.printf("%d,",solutions[best[0]][p]);
+                currentBestAsList.printf("}\n");
+
+                currentBestAsArray.printf("\n");
+                for(int p = 0; p < chromosomes; p++)
+                {
+                    currentBestAsArray.printf("%d",solutions[best[0]][p]);
+                }
+                currentBestAsArray.printf("\n");
+
+                outputFile.flush();
+                currentBestAsList.flush();
+                currentBestAsArray.flush();
+            }
+        }
+		
+		for (int i = 0; i < population; i++){
+            printChromosome(solutions, i);
+        }
+
+        System.out.println("Best strategy after " + generations + " generations:");
+        printChromosome(solutions,best[0]);
+
+        outputFile.close();
+        currentBestAsList.close();
+        currentBestAsArray.close();
 	}
 	
 	public static void fitness()
