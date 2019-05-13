@@ -266,7 +266,8 @@ public class PrisonersDilemma
             }
         }
 		
-		for (int i = 0; i < population; i++){
+		for (int i = 0; i < population; i++)
+		{
             printChromosome(solutions, i);
         }
 
@@ -446,6 +447,46 @@ public class PrisonersDilemma
 	//The rouletteWheel() method selects next parents based on fitness.
 	public static int[] rouletteWheel(double minFitness)
     {
+		//set minFitness of the population to the origin (to zero) of the reference frame
+		//add up the fitness of all the population
+		double sum = 0.0;
+        for (int i = 0; i < population; i++){
+            sum += fitness[i] - minFitness;
+        }
+
+        int[] indices = new int[2];
+        double luckyNumber, findParent;
+        int search;
+
+        // Spin number 1 to get first parent
+        luckyNumber = Math.random();
+        findParent = 0.0;
+        search = 0;
+        while (findParent <= luckyNumber && search < fitness.length)
+        {
+            findParent += (fitness[search] - minFitness) / sum; 
+			//the bigger the fitness of a player with the index "search", 
+			//the more chance it has of covering the luckyNumber and thus of being selected as parent
+            search ++;
+        }
+
+        indices[0] = search - 1;
+        //System.out.println("Parent 1 = " + indices[0]);
+
+        // Spin number 2 to get second parent
+        luckyNumber = Math.random();
+        findParent = 0.0;
+        search = 0;
+        while (findParent <= luckyNumber && search < fitness.length)
+        {
+            findParent += (fitness[search] - minFitness) / sum;
+            search ++;
+        }
+
+        indices[1] = search - 1;
+        //System.out.println("Parent 2 = " + indices[1]);
+
+        return indices;
 	}
 	
 	public static void printChromosome(int[][] array, int index)
