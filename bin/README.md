@@ -80,4 +80,5 @@ They will most likely have the approximately same score. Because TIT FOR TAT is 
 
 Therefore, for the best strategy from our GA to good,
 It should resemble the TIT FOR TAT strategy in some ways. It should either beat or tie with TIT FOR TAT.
-It should possess some TFT's characteristics, and should have similar results as TIT FOR TAT when competing against AllC, AllD, and random strategies. 
+It should possess some TFT's characteristics (when we analyze its moves in the simulation), 
+and should have similar results as TIT FOR TAT when competing against AllC, AllD, and random strategies. 
