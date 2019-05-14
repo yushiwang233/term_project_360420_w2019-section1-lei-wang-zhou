@@ -335,37 +335,49 @@ public class PrisonersDilemma
 
         System.out.print("\n\n");
 
+
         //evaluate the winning rate of the best strategy against 1000 random strategies
+        System.out.println("Evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no.");
+        Scanner keyboard = new Scanner(System.in);
+        int winEval = keyboard.nextInt();
+
         boolean printmoves = false;  //to tell the simulation method not to print all the moves
-        int numRounds = 1000;
-        int[] randStrat = new int[chromosomes]; //random strategy
-        int countWin = 0;                       //stores the number of rounds the best strategy wins
-        for(int index=0; index<numRounds; index++)
+
+        while (winEval == 1)
         {
-            for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+            int numRounds = 1000;
+            int[] randStrat = new int[chromosomes]; //random strategy
+            int countWin = 0;                       //stores the number of rounds the best strategy wins
+            for (int index = 0; index < numRounds; index++)
             {
-                double bit = Math.random();
-                if (bit < 0.5)
-                    randStrat[j] = 0;
-                else
-                    randStrat[j] = 1;
+                for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+                {
+                    double bit = Math.random();
+                    if (bit < 0.5)
+                        randStrat[j] = 0;
+                    else
+                        randStrat[j] = 1;
+                }
+
+                boolean win;
+                //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
+                win = simulation(solutions[best[0]], randStrat, "BEST_STRATEGY", "RANDOM_STRATEGY", printmoves);
+
+                if (win == true) {
+                    countWin++;  //count the number of winning rounds
+                }
+
             }
 
-            boolean win;
-            //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
-            win = simulation(solutions[best[0]], randStrat, "BEST_STRATEGY", "RANDOM_STRATEGY", printmoves);
+            //print the winning rate
+            System.out.println("\nWinning rate of best strategy: " + countWin + "/" +numRounds + "\n");
 
-            if (win == true)
-            {
-                countWin ++;  //count the number of winning rounds
-            }
+            System.out.println("Re-evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no.");
+            winEval = keyboard.nextInt();
 
         }
 
-        //print the winning rate
-        System.out.println("\n\nWinning rate of best strategy: " + countWin + "/" +numRounds);
-
-        System.out.print("\n\n");
+        System.out.println("\n");
 
         //simulation
         System.out.println("To simulate BEST STRATEGY against TIT FOR TAT, enter 0." +
@@ -377,7 +389,6 @@ public class PrisonersDilemma
                         "\nTo simulate TIT FOR TAT against RANDOM STRATEGY, enter 6." +
                         "\nTo quit simulation, enter -1.");
 
-        Scanner keyboard = new Scanner(System.in);
         int sim = keyboard.nextInt();
 
         while (sim == 0 || sim == 1 || sim == 2 || sim == 3 || sim == 4 || sim == 5 || sim == 6 )
