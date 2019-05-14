@@ -9,19 +9,31 @@ public class PrisonersDilemma
     public static final DecimalFormat df = new DecimalFormat("+#.##%;-#.##%");
 
     // Declare parameters and constants
-    public static final double pc = 0.9;                // Probability of crossover
-    public static double pm = 0.005;                    // Probability of mutation 
-    public static final int population = 20;           // Population size (represents number of players) (must be even)
+    public static final double pc = 0.8;                // Probability of crossover
+    public static final double pm = 0.002;                    // Probability of mutation
+    public static final int population = 200;           // Population size (represents number of players) (must be even)
     public static final int chromosomes = 71;          // Chromosome length (number of possible game histories)
-    public static final int generations = 10000;         // Number of generations
-    public static final int elite = (int)(0.05 * population); // Percentage of solutions to clone
+    public static final int generations = 1500;         // Number of generations
+    public static final int elite = (int)(0.01 * population); // Percentage of solutions to clone
     public static final int rounds = population-1;      //number of rounds that each player plays in a generation
-    public static final int movesTotal = 100;           //each round contains 100 moves (each move == cooperate/defect)
+    public static final int movesTotal = 100;           //each round contains 64 moves (each move == cooperate/defect)
+
+    //booleans
+    public static final boolean keepelite = false; //whether to keep elite or not. If false, the elite would still be displayed, but not kept
+    public static final boolean insertTFT = false;  //to insert a player with "TIT FOR TAT" strategy in the initial population
+    public static final boolean insertAllC = false; //to insert a player with "all cooperate" strategy in initial population
+    public static final boolean insertAllD = false; //to insert a player with "all defect" strategy in initial population
 
     // Allocate memory to store solutions + associated score and fitness
     public static int[][] solutions = new int[population][chromosomes]; // 2D array storing a chromosome for each player of the "population"
     public static int[] score = new int[population];                 // 1D array storing the score of each player in a generation
     public static double[] fitness = new double[population];            // 1D array storing the "fitness" of each player in the "population"
+    public static int[] TFT = {1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
+                                0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0};
+    public static int[] AllC = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+                                1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    public static int[] AllD = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                                0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
     //start main method
     public static void main(String[] args)
@@ -71,8 +83,33 @@ public class PrisonersDilemma
                 else
                     solutions[i][j] = 1;
             }
+
             score[i] = 0;
             fitness[i] = 0.;
+        }
+
+        if (insertTFT)
+        {
+            for (int j = 0; j < chromosomes; j++)
+            {
+                solutions[0][j] = TFT[j];
+            }
+        }
+
+        if (insertAllC)
+        {
+            for (int j = 0; j < chromosomes; j++)
+            {
+                solutions[1][j] = AllC[j];
+            }
+        }
+
+        if (insertAllD)
+        {
+            for (int j = 0; j < chromosomes; j++)
+            {
+                solutions[2][j] = AllD[j];
+            }
         }
 
         // Output
@@ -84,13 +121,15 @@ public class PrisonersDilemma
 
         // Evaluate initial fitness
         fitness();
+        System.out.print("\n\n");
+        for (int i = 0; i < population; i++)
+        {
+            System.out.print("player " + (i+1) + "\t");
+            System.out.println(df.format(fitness[i]));
+        }
 
         // Keep track of best solutions in a given generation
         int[] best = new int[elite];
-        for (int i = 0; i < elite; i++)
-        {
-            best[i] = 0;
-        }
 
         // Start generation loop
         for (int i = 1; i < generations; i++)
@@ -128,12 +167,6 @@ public class PrisonersDilemma
                     int point1 = (int)(Math.random()*chromosomes);
                     int point2 = (int)(Math.random()*chromosomes);
 
-                    if (point2 < point1)
-                    {
-                        int temp = point1;
-                        point1 = point2;
-                        point2 = temp;
-                    }
 
                     if (point1 != point2)
                     {
@@ -185,8 +218,17 @@ public class PrisonersDilemma
             // Copy tmp to solutions
             for (int j = 0; j < population; j++)
             {
-                if (fitness[j] < fitness[best[elite-1]]) // Keep elites
+                if (keepelite)
                 {
+                    if (fitness[j] < fitness[best[elite - 1]]) // Keep elites
+                    {
+                        System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
+                    }
+                }
+
+                else
+                {
+
                     System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
                 }
             }
@@ -225,7 +267,7 @@ public class PrisonersDilemma
                 maxFitness = -1e3;
                 for (int j = 0; j < population; j++)
                 {
-                    if (fitness[j] > maxFitness && fitness[j] < fitness[best[getBest-1]])
+                    if ((fitness[j] > maxFitness) && (fitness[j] < fitness[best[getBest - 1]]))
                     {
                         maxFitness = fitness[j];
                         best[getBest] = j;
@@ -239,8 +281,8 @@ public class PrisonersDilemma
             {
                 System.out.println();
                 System.out.println("Generation " + i);
-                System.out.println("Avg fitness = " + df.format(avgFitness));
-                System.out.println("Max fitness = " + df.format(fitness[best[0]]));
+                System.out.println("Population fitness = " + df.format(avgFitness));
+                System.out.println("Max individual fitness = " + df.format(fitness[best[0]]));
                 System.out.println("Elites:");
                 for (int print = 0; print < elite; print ++)
                 {
@@ -266,17 +308,327 @@ public class PrisonersDilemma
             }
         }
 
+        System.out.print("\n\n");
+
         for (int i = 0; i < population; i++)
         {
             printChromosome(solutions, i);
         }
 
+        System.out.print("\n\n");
+
+        for (int i = 0; i < population; i++)
+        {
+            System.out.print("player " + (i+1) + "\t");
+            System.out.println(df.format(fitness[i]));
+        }
+
+        System.out.print("\n\n");
+
         System.out.println("Best strategy after " + generations + " generations:");
         printChromosome(solutions,best[0]);
+        System.out.println("Has fitness " + df.format(fitness[best[0]]));
 
         outputFile.close();
         currentBestAsList.close();
         currentBestAsArray.close();
+
+        System.out.print("\n\n");
+
+        //evaluate the winning rate of the best strategy against 1000 random strategies
+        boolean printmoves = false;  //to tell the simulation method not to print all the moves
+        int numRounds = 1000;
+        int[] randStrat = new int[chromosomes]; //random strategy
+        int countWin = 0;                       //stores the number of rounds the best strategy wins
+        for(int index=0; index<numRounds; index++)
+        {
+            for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+            {
+                double bit = Math.random();
+                if (bit < 0.5)
+                    randStrat[j] = 0;
+                else
+                    randStrat[j] = 1;
+            }
+
+            boolean win;
+            //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
+            win = simulation(solutions[best[0]], randStrat, "BEST_STRATEGY", "RANDOM_STRATEGY", printmoves);
+
+            if (win == true)
+            {
+                countWin ++;  //count the number of winning rounds
+            }
+
+        }
+
+        //print the winning rate
+        System.out.println("\n\nWinning rate of best strategy: " + countWin + "/" +numRounds);
+
+        System.out.print("\n\n");
+
+        //simulation
+        System.out.println("To simulate BEST STRATEGY against TIT FOR TAT, enter 0." +
+                        "\nTo simulate BEST STRATEGY against All COOPERATE, enter 1." +
+                        "\nTo simulate BEST STRATEGY against All DEFECT, enter 2." +
+                        "\nTo simulate BEST STRATEGY against RANDOM STRATEGY, enter 3." +
+                        "\nTo simulate TIT FOR TAT against All COOPERATE, enter 4." +
+                        "\nTo simulate TIT FOR TAT against All DEFECT, enter 5." +
+                        "\nTo simulate TIT FOR TAT against RANDOM STRATEGY, enter 6." +
+                        "\nTo quit simulation, enter -1.");
+
+        Scanner keyboard = new Scanner(System.in);
+        int sim = keyboard.nextInt();
+
+        while (sim == 0 || sim == 1 || sim == 2 || sim == 3 || sim == 4 || sim == 5 || sim == 6 )
+        {
+            int[] player1 = new int[chromosomes];
+            int[] player2 = new int[chromosomes];
+
+            //Encode chromosome for player1
+            if (sim == 0 || sim == 1 || sim == 2 || sim == 3)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    player1[j] = solutions[best[0]][j];
+                }
+            }
+            if (sim == 4 || sim == 5 || sim == 6)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    player1[j] = TFT[j];
+                }
+            }
+
+            //Encode chromosome for player2
+            if (sim == 0)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    player2[j] = TFT[j];
+                }
+            }
+            if (sim == 1 || sim == 4)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    player2[j] = AllC[j];
+                }
+            }
+            if (sim == 2 || sim == 5)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    player2[j] = AllD[j];
+                }
+            }
+            if (sim == 3 || sim == 6)
+            {
+                for (int j = 0; j < chromosomes; j++)
+                {
+                    double bit = Math.random();
+                    if (bit < 0.5)
+                        player2[j] = 0;
+                    else
+                        player2[j] = 1;
+                }
+            }
+
+            String name1 = "";  //name of player 1
+            String name2 = "";
+
+            //Name player1
+            if (sim == 0 || sim == 1 || sim == 2 || sim == 3)
+            {
+                name1 = "BEST_STRATEGY";
+            }
+            if (sim == 4 || sim == 5 || sim == 6)
+            {
+                name1 = "TIT_FOR_TAT";
+            }
+
+            //Name player2
+            if (sim == 0)
+            {
+                name2 = "TIT_FOR_TAT";
+            }
+            if (sim == 1 || sim == 4)
+            {
+                name2 = "ALL_COOPERATE";
+            }
+            if (sim == 2 || sim == 5)
+            {
+                name2 = "ALL_DEFECT";
+            }
+            if (sim == 3 || sim == 6)
+            {
+                name2 = "RANDOM_STRATEGY";
+            }
+
+            //Official announce the name of the two players
+            System.out.println("Player1: " + name1 +"\nPlayer2: " + name2);
+
+            //start simulation
+            printmoves = true;
+            simulation(player1, player2, name1, name2, printmoves);
+
+            //restart another simulation
+            System.out.println("\n\nTo simulate BEST STRATEGY against TIT FOR TAT, enter 0." +
+                    "\nTo simulate BEST STRATEGY against All COOPERATE, enter 1." +
+                    "\nTo simulate BEST STRATEGY against All DEFECT, enter 2." +
+                    "\nTo simulate BEST STRATEGY against RANDOM STRATEGY, enter 3." +
+                    "\nTo simulate TIT FOR TAT against All COOPERATE, enter 4." +
+                    "\nTo simulate TIT FOR TAT against All DEFECT, enter 5." +
+                    "\nTo simulate TIT FOR TAT against RANDOM STRATEGY, enter 6." +
+                    "\nTo quit simulation, enter -1.");
+
+            sim = keyboard.nextInt();
+        }
+    }
+
+    public static boolean simulation(int[] player1, int[] player2, String name1, String name2, boolean printmoves)
+    {
+        boolean win = false;
+
+        if (printmoves==true)
+        {
+            System.out.print("\n" + name1 + ": ");
+
+            for (int j = 0; j < chromosomes; j++) {
+                System.out.print(player1[j]);
+            }
+
+            System.out.print("\n" + name2 + ": ");
+
+            for (int j = 0; j < chromosomes; j++) {
+                System.out.print(player2[j]);
+            }
+        }
+
+        int[] history1 = new int[6]; //history for player1
+        int[] history2 = new int[6]; //history for player2
+        /*
+				The 6 integers in the array "history" represent (in order):
+				player's first move, opponent's second move
+				player's second move, opponent's second move
+				player's third move, opponent's third move
+		*/
+
+        int scoreplayer1 = 0;       //used to store score of player1
+        int scoreplayer2 = 0;       //used to store score of player2
+
+        //at the beginning of a round, initialize all history to no history(-1)
+        for (int i=0; i<6; i++)
+        {
+            history1[i] = -1; //history for player1
+            history2[i] = -1; //history for player2
+        }
+
+        for (int moves = 0; moves < movesTotal; moves++)
+        {
+            int genePlayer1 = situation(history1);
+            int genePlayer2 = situation(history2);
+            int movePlayer1 = player1[genePlayer1];
+            int movePlayer2 = player2[genePlayer2];
+
+            if (printmoves==true)
+            {
+                System.out.println("\n");
+                String moveStringPlayer1 = "";
+                String moveStringPlayer2 = "";
+
+                if (movePlayer1 == 1)
+                    moveStringPlayer1 = "cooperates";
+                else if (movePlayer1 == 0)
+                    moveStringPlayer1 = "defects";
+
+                if (movePlayer2 == 1)
+                    moveStringPlayer2 = "cooperates";
+                else if (movePlayer2 == 0)
+                    moveStringPlayer2 = "defects";
+
+                //Print the move of each player
+                System.out.println("Game " + (moves + 1) + "\n" + name1 + ": " + moveStringPlayer1
+                        + "\n" + name2 + ": " + moveStringPlayer2);
+            }
+
+            //Update history after player1 and player2 both make moves
+            for (int i=0; i<4; i++)
+            {
+                history1[i] = history1[i+2];
+                history2[i] = history2[i+2];
+            }
+            history1[4] = movePlayer1;
+            history1[5] = movePlayer2;
+            history2[4] = movePlayer2;
+            history2[5] = movePlayer1;
+
+            /*
+				Update the scores
+				If both cooperate, +3 for both. If both defect, +1 for both.
+				If one cooperates and one defects, +0 for the one who cooperates and +5 for the one who defects.
+			*/
+
+            if (movePlayer1==1 && movePlayer2==1) //if both cooperate
+            {
+                scoreplayer1 += 3;
+                scoreplayer2 += 3;
+                if (printmoves==true)
+                {
+                    System.out.println("+3 for " + name1
+                            + "\n+3 for " + name2);
+                }
+            }
+            else if (movePlayer1==0 && movePlayer2==0) //if both defect
+            {
+                scoreplayer1 += 1;
+                scoreplayer2 += 1;
+                if (printmoves==true)
+                {
+                    System.out.println("+1 for " + name1
+                            + "\n+1 for " + name2 );
+                }
+
+            }
+            else if (movePlayer1==1 && movePlayer2==0) //if player1 cooperates and player2 defects
+            {
+                scoreplayer1 += 0;
+                scoreplayer2 += 5;
+                if (printmoves==true)
+                {
+                    System.out.println("+0 for " + name1
+                            + "\n+5 for " + name2);
+                }
+            }
+            else if (movePlayer1==0 && movePlayer2==1) //if player1 defects and player2 cooperates
+            {
+                scoreplayer1 += 5;
+                scoreplayer2 += 0;
+                if (printmoves==true)
+                {
+                    System.out.println("+5 for " + name1
+                            + "\n+0 for " + name2 );
+                }
+
+            }
+        }
+
+        //print the final score of each player over the max score each can obtain
+        if (printmoves==true)
+        {
+            System.out.println("\n Scores for " + name1 + " vs " + name2 +": \n"
+                    + name1 + ": " + scoreplayer1 + "/" + (movesTotal*6)
+                    +"\n"  + name2 + ": " + scoreplayer2 + "/" + (movesTotal*6));
+        }
+
+        if (scoreplayer1 >= scoreplayer2)
+        {
+            win = true;
+        }
+
+        return win;
+
     }
 
     public static void fitness()
@@ -341,8 +693,8 @@ public class PrisonersDilemma
                     history1[5] = movePlayer2;
                     history2[4] = movePlayer2;
                     history2[5] = movePlayer1;
-					
-					
+
+
 					/*
 						Update the scores
 						If both cooperate, +3 for both. If both defect, +1 for both.
@@ -382,7 +734,7 @@ public class PrisonersDilemma
 			history[2] == player's second move, history[3] == opponent's second move
 			history[4] == player's third move, history[5] == opponent's third move
 		*/
-        int situation = 0;
+        int situation;
 		
 		/*in determining the first three moves of a round, 
 		   we don't care about the previous moves of the player in question himself, 
@@ -394,13 +746,13 @@ public class PrisonersDilemma
             situation = 1;
         else if (history[3] == -1 && history[5] == 0) //first move of opponent was defect
             situation = 2;
-        else if (history[1] == -1 && history[3] == 1 && history[5] == 1) //opponent's 1st move && 2nd move == cooperate
+        else if (history[1] == -1 && history[3] == 1 && history[5] == 1) //opponent's 1st move & 2nd move == cooperate
             situation = 3;
         else if (history[1] == -1 && history[3] == 1 && history[5] == 0) //opponent's 1st move == cooperate, 2nd move == defect
             situation = 4;
         else if (history[1] == -1 && history[3] == 0 && history[5] == 1) //opponent's 1st move == defect, 2nd move == cooperate
             situation = 5;
-        else if (history[1] == -1 && history[3] == 0 && history[5] == 0) //opponent's 1st move && 2nd move == defect
+        else if (history[1] == -1 && history[3] == 0 && history[5] == 0) //opponent's 1st move & 2nd move == defect
             situation = 6;
 		
         /*in determining the fourth move up until the last, 
@@ -491,7 +843,7 @@ public class PrisonersDilemma
 
     public static void printChromosome(int[][] array, int index)
     {
-        System.out.print("\t");
+        System.out.print("player " + (index+1) + "\t");
 
         for (int j = 0; j < chromosomes; j++){
             System.out.print(array[index][j]);
