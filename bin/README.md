@@ -6,14 +6,14 @@ Place the code you developped for the term project in this folder. Add any instr
 
 **Quick Intro**
 
-The TIT FOR TAT Strategy is the best strategy for Prisoners' Dilemma to be theoretically known.  
-Therefore, the *goal of this project* is to create a generic algorithm that produces a strategy possessing the similar characteristics as the TIT FOR TAT Strategy.
+The *TIT FOR TAT* Strategy is the best strategy for Prisoners' Dilemma to be theoretically known.  
+Therefore, the *goal of this project* is to create a generic algorithm that produces a strategy possessing the similar characteristics as the *TIT FOR TAT* Strategy.
 
 ***Brief explanation of the TIT FOR TAT Strategy***:  
 Its first move is always cooperate. It's never the first to defect.  
 If the opponent cooperates, TFT keeps cooperating.  
 If the opponent defects, then TFT is going to defect in the next game.  
-However, if the opponent begins cooperating, TIT FOR TAT will come back to cooperation in the next game.  
+However, if the opponent begins cooperating, *TIT FOR TAT* will come back to cooperation in the next game.  
 Note: TFT only looks at opponent's previous move to decide next move.
 
 ***Characteristics of TIT FOR TAT Strategy***  
@@ -38,25 +38,24 @@ When running the main method, two choices (excluding the exit choice) appear.
 
 It is recommended to start with the *TIT FOR TAT zone*, because *TIT FOR TAT* is the control strategy. It is the one of the theoretically known best strategies.  
 Beginning by playing with the *TIT FOR TAT* strategy can give you an idea about what a good strategy looks like, and about whether the strategy developped by the GA is a good one or not.  
-Upon entering the *TIT FOR TAT* zone, four choices appear.  
+Upon entering the *TIT FOR TAT zone*, four choices appear.  
 1. Evaluate winning rate (fitness) of *TIT FOR TAT* strategy. (By making it play against 1000 random strategies)  
 2. Simulate round of *TIT FOR TAT* against *All COOPERATE*  
 3. Simulate *TIT FOR TAT* against *All DEFECT*  
-4. Simulate *TIT FOR TAT* against *RANDOM STRATEGY*  
+4. Simulate *TIT FOR TAT* against *RANDOM STRATEGY*
+
 It is recommended to try all of them.
 
 1. If you simulate *TIT FOR TAT* against *All COOPERATE*:  
 They will tie.  
 It is logical: All the moves by both players are cooperative, therefore both of them gain 3 points at every game.
-
 2. If you simulate *TIT FOR TAT* against *All DEFECT*:  
 *TIT FOR TAT* will obtain 5 pts less than *All DEFECT*.  
 Because in the first game TFT cooperates and AllD defects, so +0 for TFT and +5 for AllD.  
 However *TIT FOR TAT* doesn't allow *All DEFECT* to further exploit him and will defect in every following game as well.  
 Therefore for rest of the games, both of them gain 1 point at every game.
-
 3. If you simulate *TIT FOR TAT* against *RANDOM STRATEGY*:   
-They will most likely have the approximately same score. Because TIT FOR TAT is nice, and at the same time doesn't allow the opponent to have a big advantage.   
+They will most likely have the approximately same score. Because *TIT FOR TAT* is nice, and at the same time doesn't allow the opponent to have a big advantage.   
 The random strategies are generated in a way such that their genes have 50% chance to be C and 50% chance to be D. Therefore most of them would cooperate to some extent.  
 Thus the sum of *TIT FOR TAT*' score and *RANDOM STRATEGY*'s score is most of the time over 400 points.
 
@@ -119,7 +118,7 @@ If one cooperates and one defects, +0 for cooperating one and +5 for defecting o
 Winning does not necessarily mean having a higher score than the opponent. A HIGHER SCORE DOES NOT NECESSARILY INDICATE THAT IT IS A GOOD STRATEGY.  
 For example, the *TIT FOR TAT* does not always win, but rather tries to maximize points for both players.  
 A truly good strategy should not exploit its opponent, but should rather try to enforce cooperation by being nice and by punishing the un-cooperation of the opponent.  
-(see section below on Characteristics of TIT FOR TAT Strategy)
+(see section below on Characteristics of *TIT FOR TAT* Strategy)
 
 If a strategy has a score that is much higher than his opponent, it means that he is exploiting his opponent, which is undesirable.  
 i.e. He always defects when his opponent cooperates, and his opponent keeps cooperating.  
