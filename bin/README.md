@@ -124,7 +124,7 @@ If a strategy has a score that is much higher than his opponent, it means that h
 i.e. He always defects when his opponent cooperates, and his opponent keeps cooperating.  
 The same strategy can fail drastically if he encounters a different opponent that does not tend to cooperate.
 
-***Therefore, players do not win individually, but actually win with their opponent as a team of two. ***
+**Therefore, players do not win individually, but actually win with their opponent as a team of two. **
 
 Since *TIT FOR TAT* is the best strategy, *win* should be defined in a way such that *TIT FOR TAT* always wins or wins most of the time (and such that it has a very high fitness).
 
@@ -136,7 +136,10 @@ In order to win, two conditions has to be fulfilled.
 2-Math.abs(score of player1 - score of player2) <=5  
 (the difference between the two players' score is small. Meaning that the high score of over 400 really results from cooperation and does not result from the exploitation of one by the other.)
 
-With this definition, *TIT FOR TAT* effectively has a high fitness (around 80%). But note that this is only definition PART 1. PART 2 of the definition is in section H) below.
+With this definition, *TIT FOR TAT* effectively has a high fitness (around 80%).  
+The GA would also plateau at around 85% which is absolutely normal, since 80% is already considered as very high.  
+Then when you re-evaluate the fitness of the *GA best strategy* against newly generated random solutions, it would lower itself to around 80% (which is again perfectly normal! Remember that the best strategy *TIT FOR TAT* has 80% of fitness).  
+But note that this is only definition PART 1. PART 2 of the definition is in section H) below.
 
 ---
 
@@ -172,10 +175,11 @@ It is just like in Robby the Robot where Robby was trained with rooms containing
 **H) Definition of *winning* PART 2**
 
 To solve the problem of specificity which is mentioned in the previous section, we have to put some *All DEFECT* amidst the set of random strategies against which the *GA best strategy* is trained.   
+It is like to help the *GA best strategy* develop a resistance againt the *All DEFECT* strategy.
 Then, a new part should be added to the already existing definition of *winning*.
 
 In addition to Part 1, a round of games is also won if:  
-1. The genes of the opponent are over 70% Defect.  
+1. The genes of the opponent are over 65% Defect.  
 **AND**  
 2. Math.abs(score of player1 - score of player2) <=5.
 
@@ -183,8 +187,9 @@ Notice that in this part of definition, there is no restriction on the sum of bo
 It is lenient, because we understand that if the opponent refuses to cooperate, then it is impossible for the sum to be high.  
 However, our goal is for the *GA best strategy* to be able to defend himself against this kind of player, so the restriction of a small difference between the two players' scores is still present.
 
-The final definition of *winning* would be if (Definition part 1 = true **OR* Definition part 2 = true), then player wins.
+The final definition of *winning* would be if (Definition part 1 = true *OR* Definition part 2 = true), then player wins.
 
+With both parts of the definition of *winning*, now the trained *GA best strategy* should behave similarly to *TIT FOR TAT* in all simulations, including against the *ALL DEFECT*!!!!!!!
 
 
 

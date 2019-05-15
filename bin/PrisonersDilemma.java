@@ -9,17 +9,17 @@ public class PrisonersDilemma
     public static final DecimalFormat df = new DecimalFormat("+#.##%;-#.##%");
 
     // Declare parameters and constants
-    public static final double pc = 0.8;                // Probability of crossover
-    public static final double pm = 0.002;                    // Probability of mutation
-    public static final int population = 200;           // Population size (represents number of players) (must be even)
+    public static final double pc = 0.9;                // Probability of crossover
+    public static final double pm = 0.005;                    // Probability of mutation
+    public static final int population = 100;           // Population size (represents number of players) (must be even)
     public static final int chromosomes = 71;          // Chromosome length (number of possible game histories)
-    public static final int generations = 1500;         // Number of generations
-    public static final int elite = (int)(0.01 * population); // Percentage of solutions to clone
-    public static final int rounds = population-1;      //number of rounds that each player plays in a generation
+    public static final int generations = 500;         // Number of generations
+    public static final int elite = (int)(0.02 * population); // Percentage of solutions to clone
+    public static final int rounds = 500;      //number of rounds that each player plays in a generation
     public static final int movesTotal = 100;           //each round contains 64 moves (each move == cooperate/defect)
 
     //booleans
-    public static final boolean keepelite = false; //whether to keep elite or not. If false, the elite would still be displayed, but not kept
+    public static final boolean keepelite = true; //whether to keep elite or not. If false, the elite would still be displayed, but not kept
     public static final boolean insertTFT = false;  //to insert a player with "TIT FOR TAT" strategy in the initial population
     public static final boolean insertAllC = false; //to insert a player with "all cooperate" strategy in initial population
     public static final boolean insertAllD = false; //to insert a player with "all defect" strategy in initial population
@@ -28,6 +28,7 @@ public class PrisonersDilemma
     public static int[][] solutions = new int[population][chromosomes]; // 2D array storing a chromosome for each player of the "population"
     public static int[] score = new int[population];                 // 1D array storing the score of each player in a generation
     public static double[] fitness = new double[population];            // 1D array storing the "fitness" of each player in the "population"
+    public static int[] best = new int[elite];
     public static int[] TFT = {1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,
                                 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0};
     public static int[] AllC = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -72,435 +73,545 @@ public class PrisonersDilemma
             System.exit(0);
         }
 
-        // Initialize population randomly
-        for (int i = 0; i < population; i++)
+        System.out.println("***** To start the genetic algorithm, enter 0. *****" +
+                            "\n***** To start with the TIT FOR TAT (control strategy) zone, enter 1. *****" +
+                            "\n***** To exit program, enter -1. *****");
+
+        Scanner keyboard = new Scanner(System.in);
+        int option = keyboard.nextInt();
+
+        while (option ==0 || option ==1)
         {
-            for (int j = 0; j < chromosomes; j++)
-            {
-                double bit = Math.random();
-                if (bit < 0.5)
-                    solutions[i][j] = 0;
-                else
-                    solutions[i][j] = 1;
-            }
 
-            score[i] = 0;
-            fitness[i] = 0.;
-        }
 
-        if (insertTFT)
-        {
-            for (int j = 0; j < chromosomes; j++)
-            {
-                solutions[0][j] = TFT[j];
-            }
-        }
-
-        if (insertAllC)
-        {
-            for (int j = 0; j < chromosomes; j++)
-            {
-                solutions[1][j] = AllC[j];
-            }
-        }
-
-        if (insertAllD)
-        {
-            for (int j = 0; j < chromosomes; j++)
-            {
-                solutions[2][j] = AllD[j];
-            }
-        }
-
-        // Output
-        System.out.println("Generation 0");
-        for (int i = 0; i < population; i++)
-        {
-            printChromosome(solutions, i);
-        }
-
-        // Evaluate initial fitness
-        fitness();
-        System.out.print("\n\n");
-        for (int i = 0; i < population; i++)
-        {
-            System.out.print("player " + (i+1) + "\t");
-            System.out.println(df.format(fitness[i]));
-        }
-
-        // Keep track of best solutions in a given generation
-        int[] best = new int[elite];
-
-        // Start generation loop
-        for (int i = 1; i < generations; i++)
-        {
-            // Worst fitness in current generation
-            double minFitness = 1.;
-            for (int k = 0; k < population; k++)
-            {
-                if (fitness[k] < minFitness)
-                    minFitness = fitness[k];
-            }
-            //System.out.println("Min fitness = " + df.format(minFitness));
-
-            // Temporary memory allocation for next generation
-            int[][] tmp = new int[population][chromosomes];
-
-            // Create new population
-            int count = 0;
-            while (count < population)
-            {
-                // Selection by roulette wheel
-                int[] parents = rouletteWheel(Math.min(minFitness, -1.));
-                //printChromosome(solutions,parents[0]);
-                //printChromosome(solutions,parents[1]);
-
-                // Two-point crossover
-                if (Math.random() < pc)
-                {
-                    for (int j = 0 ; j<chromosomes; j++)
-                    {
-                        tmp[count][j] = solutions[parents[0]][j];
-                        tmp[count+1][j] = solutions[parents[1]][j];
+//***************************************option start genetic algorithm****************************************
+            while (option == 0) {
+                // Initialize population randomly
+                for (int i = 0; i < population; i++) {
+                    for (int j = 0; j < chromosomes; j++) {
+                        double bit = Math.random();
+                        if (bit < 0.5)
+                            solutions[i][j] = 0;
+                        else
+                            solutions[i][j] = 1;
                     }
 
-                    int point1 = (int)(Math.random()*chromosomes);
-                    int point2 = (int)(Math.random()*chromosomes);
+                    fitness[i] = 0.;
+                }
 
+                if (insertTFT) {
+                    for (int j = 0; j < chromosomes; j++) {
+                        solutions[0][j] = TFT[j];
+                    }
+                }
 
-                    if (point1 != point2)
-                    {
-                        for (int w=point1; w<=point2; w++)
+                if (insertAllC) {
+                    for (int j = 0; j < chromosomes; j++) {
+                        solutions[1][j] = AllC[j];
+                    }
+                }
+
+                if (insertAllD) {
+                    for (int j = 0; j < chromosomes; j++) {
+                        solutions[2][j] = AllD[j];
+                    }
+                }
+
+                // Output
+                System.out.println("Generation 0");
+                for (int i = 0; i < population; i++) {
+                    printChromosome(solutions, i);
+                }
+
+                // Evaluate initial fitness
+                fitness();
+                System.out.print("\n\n");
+                for (int i = 0; i < population; i++) {
+                    System.out.print("player " + (i + 1) + "\t");
+                    System.out.println(df.format(fitness[i]));
+                }
+
+                // Start generation loop
+                for (int i = 1; i < generations; i++) {
+                    // Worst fitness in current generation
+                    double minFitness = 1.;
+                    for (int k = 0; k < population; k++) {
+                        if (fitness[k] < minFitness)
+                            minFitness = fitness[k];
+                    }
+                    //System.out.println("Min fitness = " + df.format(minFitness));
+
+                    // Temporary memory allocation for next generation
+                    int[][] tmp = new int[population][chromosomes];
+
+                    // Create new population
+                    int count = 0;
+                    while (count < population) {
+                        // Selection by roulette wheel
+                        int[] parents = rouletteWheel(Math.min(minFitness, -1.));
+                        //printChromosome(solutions,parents[0]);
+                        //printChromosome(solutions,parents[1]);
+
+                        // Two-point crossover
+                        if (Math.random() < pc)
                         {
-                            tmp[count+1][w] = solutions[parents[0]][w];
-                            tmp[count][w] = solutions[parents[1]][w];
+                            for (int j = 0; j < chromosomes; j++) {
+                                tmp[count][j] = solutions[parents[0]][j];
+                                tmp[count + 1][j] = solutions[parents[1]][j];
+                            }
+
+                            int point1 = (int) (Math.random() * chromosomes);
+                            int point2 = (int) (Math.random() * chromosomes);
+
+
+                            if (point1 != point2) {
+                                for (int w = point1; w <= point2; w++) {
+                                    tmp[count + 1][w] = solutions[parents[0]][w];
+                                    tmp[count][w] = solutions[parents[1]][w];
+                                }
+                            } else {
+                                tmp[count + 1][point1] = solutions[parents[0]][point1];
+                                tmp[count][point1] = solutions[parents[1]][point1];
+                            }
+
+                        }
+
+                        else
+                         {
+                            for (int j = 0; j < chromosomes; j++)
+                            {
+                                tmp[count][j] = solutions[parents[0]][j];
+                                tmp[count + 1][j] = solutions[parents[1]][j];
+                            }
+                        }
+
+
+                        // Mutation
+                        for (int j = 0; j < chromosomes; j++)
+                        {
+                            if (Math.random() <= pm) {
+                                tmp[count][j] = (int) (Math.random() * 2);
+                            }
+
+                            if (Math.random() <= pm) {
+                                tmp[count + 1][j] = (int) (Math.random() * 2);
+                            }
+                        }
+
+                        // Advance count by 2 as we have added two children i.e. two new
+                        // rows in tmp[][].
+                        count = count + 2;
+                    }
+
+
+                    // Copy tmp to solutions
+                    for (int j = 0; j < population; j++)
+                    {
+                        if (keepelite)
+                        {
+                            if (fitness[j] < fitness[best[elite - 1]]) // Keep elites
+                            {
+                                System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
+                            }
+                        }
+                        else
+                        {
+
+                            System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
                         }
                     }
 
-                    else
-                    {
-                        tmp[count+1][point1] = solutions[parents[0]][point1];
-                        tmp[count][point1] = solutions[parents[1]][point1];
+
+                    // Update objective function
+                    fitness();
+
+
+                    // Calculate average fitness of population and output
+                    double sumFitness = 0.0;
+                    for (int j = 0; j < population; j++){
+                        sumFitness += fitness[j];
                     }
 
-                }
+                    double avgFitness = sumFitness / population;
 
-                else
-                {
-                    for (int j = 0 ; j<chromosomes; j++)
+
+                    // Find elite solutions and output best
+                    double maxFitness = -1e3;
+                    for (int j = 0; j < population; j++)
                     {
-                        tmp[count][j] = solutions[parents[0]][j];
-                        tmp[count+1][j] = solutions[parents[1]][j];
+                        if (fitness[j] > maxFitness)
+                        {
+                            maxFitness = fitness[j];
+                            best[0] = j;
+                        }
+                    }
+                    for (int getBest = 1; getBest < elite; getBest++)
+                    {
+                        maxFitness = -1e3;
+                        for (int j = 0; j < population; j++)
+                        {
+                            if ((fitness[j] > maxFitness) && (fitness[j] < fitness[best[getBest - 1]]))
+                            {
+                                maxFitness = fitness[j];
+                                best[getBest] = j;
+                            }
+                        }
+                    }
+
+
+                    // Output
+                    if (i % 10 == 0) {
+                        System.out.println();
+                        System.out.println("Generation " + i);
+                        System.out.println("Population fitness = " + df.format(avgFitness));
+                        System.out.println("Max individual fitness = " + df.format(fitness[best[0]]));
+                        System.out.println("Elites:");
+                        for (int print = 0; print < elite; print++) {
+                            System.out.println(best[print] + "\t" + df.format(fitness[best[print]]));
+                        }
+
+                        outputFile.printf("%d\t%1.6e\t%1.6e\r\n", i, avgFitness, fitness[best[0]]);
+                        currentBestAsList.printf("{");
+                        for (int p = 0; p < chromosomes; p++)
+                            currentBestAsList.printf("%d,", solutions[best[0]][p]);
+                        currentBestAsList.printf("}\n");
+
+                        currentBestAsArray.printf("\n");
+                        for (int p = 0; p < chromosomes; p++) {
+                            currentBestAsArray.printf("%d", solutions[best[0]][p]);
+                        }
+                        currentBestAsArray.printf("\n");
+
+                        outputFile.flush();
+                        currentBestAsList.flush();
+                        currentBestAsArray.flush();
                     }
                 }
 
+                System.out.print("\n\n");
 
-                // Mutation
-                for (int j = 0; j<chromosomes; j++)
-                {
-                    if (Math.random() <= pm)
-                    {
-                        tmp[count][j] = (int) (Math.random()*2);
+                for (int i = 0; i < population; i++) {
+                    printChromosome(solutions, i);
+                }
+
+                System.out.print("\n\n");
+
+                for (int i = 0; i < population; i++) {
+                    System.out.print("player " + (i + 1) + "\t");
+                    System.out.println(df.format(fitness[i]));
+                }
+
+                System.out.print("\n\n");
+
+                System.out.println("Best strategy after " + generations + " generations:");
+                printChromosome(solutions, best[0]);
+                System.out.println("Has fitness " + df.format(fitness[best[0]]));
+
+                outputFile.close();
+                currentBestAsList.close();
+                currentBestAsArray.close();
+
+                System.out.print("\n\n");
+
+                //evaluate the winning rate of the best strategy against 1000 random strategies
+                System.out.println("***** Re-evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no. *****");
+                int winEval = keyboard.nextInt();
+
+                boolean printmoves = false;  //to tell the simulation method not to print all the moves
+
+                while (winEval == 1) {
+                    int numRounds = 1000;
+                    int[] randStrat = new int[chromosomes]; //random strategy
+                    int countWin = 0;                       //stores the number of rounds the best strategy wins
+                    for (int index = 0; index < numRounds; index++) {
+                        for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+                        {
+                            double bit = Math.random();
+                            if (bit < 0.5)
+                                randStrat[j] = 0;
+                            else
+                                randStrat[j] = 1;
+                        }
+
+                        boolean win;
+                        //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
+                        win = simulation(solutions[best[0]], randStrat, "BEST_STRATEGY", "RANDOM_STRATEGY", printmoves);
+
+                        if (win == true) {
+                            countWin++;  //count the number of winning rounds
+                        }
+
                     }
 
-                    if (Math.random() <= pm)
-                    {
-                        tmp[count+1][j] = (int) (Math.random()*2);
+                    //print the winning rate
+                    System.out.println("\nWinning rate of best strategy: " + df.format((double)countWin/numRounds));
+
+                    System.out.println("***** Re-evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no. *****");
+                    winEval = keyboard.nextInt();
+
+                }
+                System.out.println("\n***** To restart the genetic algorithm, enter 0. *****" +
+                        "\n***** To continue with simulation, enter 2. *****" +
+                        "\n***** To exit program, enter -1. *****");
+                option = keyboard.nextInt();
+
+                System.out.println("\n");
+            }
+
+
+//***************************************option "start with TIT FOR TAT SIMULATION"****************************************
+            while (option == 1) {
+                //simulation
+                System.out.println("\n***** To evaluate winning rate (fitness) of TIT FOR TAT (theoretically the best strategy) for control, enter 0. *****" +
+                        "\n***** To simulate TIT FOR TAT against All COOPERATE, enter 1. *****" +
+                        "\n***** To simulate TIT FOR TAT against All DEFECT, enter 2. *****" +
+                        "\n***** To simulate TIT FOR TAT against RANDOM STRATEGY, enter 3. *****" +
+                        "\n***** To exit the TIT FOR TAT zone, enter -1. *****");
+
+                int sim = keyboard.nextInt();
+
+                while (sim == 0 || sim == 1 || sim == 2 || sim == 3) {
+
+
+                 //********************Evaluate the winning rate of TIT FOR TAT (theorically the best strategy) for control***********************
+                    while (sim == 0) {
+                        boolean printmoves = false;  //to tell the simulation method not to print all the moves
+                        int numRounds = 1000;
+                        int[] randStrat = new int[chromosomes]; //random strategy
+                        int countWin = 0;                       //stores the number of rounds the best strategy wins
+                        for (int index = 0; index < numRounds; index++) {
+                            for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+                            {
+                                double bit = Math.random();
+                                if (bit < 0.5)
+                                    randStrat[j] = 0;
+                                else
+                                    randStrat[j] = 1;
+                            }
+
+                            boolean win;
+                            //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
+                            win = simulation(TFT, randStrat, "TIT_FOR_TAT", "RANDOM_STRATEGY", printmoves);
+
+                            if (win == true) {
+                                countWin++;  //count the number of winning rounds
+                            }
+                        }
+
+                        //print the winning rate
+                        System.out.println("\nWinning rate (fitness) of TIT_FOR_TAT: " + df.format((double) countWin / numRounds));
+
+                        System.out.println("\n***** To re-evaluate winning rate (fitness) of TIT FOR TAT, enter 0. *****" +
+                                "\n***** To simulate TIT FOR TAT against All COOPERATE, enter 1. *****" +
+                                "\n***** To simulate TIT FOR TAT against All DEFECT, enter 2. *****" +
+                                "\n***** To simulate TIT FOR TAT against RANDOM STRATEGY, enter 3. *****" +
+                                "\n***** To exit the TIT FOR TAT zone, enter -1. *****");
+                        sim=keyboard.nextInt();
                     }
-                }
 
-                // Advance count by 2 as we have added two children i.e. two new
-                // rows in tmp[][].
-                count = count + 2;
-            }
-
-
-            // Copy tmp to solutions
-            for (int j = 0; j < population; j++)
-            {
-                if (keepelite)
-                {
-                    if (fitness[j] < fitness[best[elite - 1]]) // Keep elites
+                    while (sim == 1 || sim == 2 || sim == 3)
                     {
-                        System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
+
+                     //********************Simulation of TIT FOR TAT against selected opponent***********************
+                        int[] player1 = new int[chromosomes];
+                        int[] player2 = new int[chromosomes];
+
+                        //Encode chromosome for player1
+                        for (int j = 0; j < chromosomes; j++) {
+                            player1[j] = TFT[j];
+                        }
+
+                        //Encode chromosome for player2
+                        if (sim == 1) {
+                            for (int j = 0; j < chromosomes; j++) {
+                                player2[j] = AllC[j];
+                            }
+                        }
+                        if (sim == 2) {
+                            for (int j = 0; j < chromosomes; j++) {
+                                player2[j] = AllD[j];
+                            }
+                        }
+                        if (sim == 3) {
+                            for (int j = 0; j < chromosomes; j++) {
+                                double bit = Math.random();
+                                if (bit < 0.5)
+                                    player2[j] = 0;
+                                else
+                                    player2[j] = 1;
+                            }
+                        }
+
+                        String name1 = "";  //name of player 1
+                        String name2 = "";
+
+                        //Name player1
+                        name1 = "TIT_FOR_TAT";
+
+                        //Name player2
+                        if (sim == 1) {
+                            name2 = "ALL_COOPERATE";
+                        }
+                        if (sim == 2) {
+                            name2 = "ALL_DEFECT";
+                        }
+                        if (sim == 3) {
+                            name2 = "RANDOM_STRATEGY";
+                        }
+
+                        //Official announce the name of the two players
+                        System.out.println("Player1: " + name1 + "\nPlayer2: " + name2);
+
+                        //start simulation
+                        boolean printmoves = true;
+                        simulation(player1, player2, name1, name2, printmoves);
+
+                        //restart another simulation
+                        System.out.println("\n***** To evaluate winning rate (fitness) of TIT FOR TAT, enter 0. *****" +
+                                "\n***** To simulate TIT FOR TAT against All COOPERATE, enter 1. *****" +
+                                "\n***** To simulate TIT FOR TAT against All DEFECT, enter 2. *****" +
+                                "\n***** To simulate TIT FOR TAT against RANDOM STRATEGY, enter 3. *****" +
+                                "\n***** To exit the TIT FOR TAT zone, enter -1. *****");
+                        sim = keyboard.nextInt();
                     }
-                }
 
-                else
-                {
-
-                    System.arraycopy(tmp[j], 0, solutions[j], 0, chromosomes);
+                    System.out.println("\n***** To return to genetic algorithm, enter 0. *****" +
+                            "\n***** To exit the program, enter -1. *****");
+                    option = keyboard.nextInt();
                 }
             }
 
+//***************************************options "start with GA" and "Continue with simulation****************************************
 
-            // Update objective function
-            fitness();
+            while (option == 2) {
+                //simulation
+                System.out.println("\n***** To simulate BEST STRATEGY against TIT FOR TAT, enter 0. ***** " +
+                        "\n***** To simulate BEST STRATEGY against All COOPERATE, enter 1. ***** " +
+                        "\n***** To simulate BEST STRATEGY against All DEFECT, enter 2. ***** " +
+                        "\n***** To simulate BEST STRATEGY against RANDOM STRATEGY, enter 3. ***** " +
+                        "\n***** To simulate TIT FOR TAT against All COOPERATE, enter 4. ***** " +
+                        "\n***** To simulate TIT FOR TAT against All DEFECT, enter 5. ***** " +
+                        "\n***** To simulate TIT FOR TAT against RANDOM STRATEGY, enter 6. ***** " +
+                        "\n***** To exit program, enter -1. ***** ");
 
+                int sim = keyboard.nextInt();
 
-            // Calculate average fitness of population and output
-            double sumScore = 0.0;
-            double maxScoreGen = population * rounds * movesTotal * 3.0; //maximum collective score in a generation
+                while (sim == 0 || sim == 1 || sim == 2 || sim == 3 || sim == 4 || sim == 5 || sim == 6) {
+                    int[] player1 = new int[chromosomes];
+                    int[] player2 = new int[chromosomes];
 
-            //***note*** (max collective score) is not equal to (max individual score)*population
-            //because everyone cannot get 5pts at each move. If a player gets 5, his opponent has 0.
-            //the max collective score would result in each person obtaining 3 at each move (cooperation+cooperation)
-
-            for (int j = 0; j < population; j++){
-                sumScore += score[j];
-            }
-
-            double avgFitness = sumScore / maxScoreGen;
-
-            // Find elite solutions and output best
-            double maxFitness = -1e3;
-            for (int j = 0; j < population; j++)
-            {
-                if (fitness[j] > maxFitness)
-                {
-                    maxFitness = fitness[j];
-                    best[0] = j;
-                }
-            }
-            for (int getBest = 1; getBest < elite; getBest++)
-            {
-                maxFitness = -1e3;
-                for (int j = 0; j < population; j++)
-                {
-                    if ((fitness[j] > maxFitness) && (fitness[j] < fitness[best[getBest - 1]]))
-                    {
-                        maxFitness = fitness[j];
-                        best[getBest] = j;
+                    //Encode chromosome for player1
+                    if (sim == 0 || sim == 1 || sim == 2 || sim == 3) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            player1[j] = solutions[best[0]][j];
+                        }
                     }
-                }
-            }
+                    if (sim == 4 || sim == 5 || sim == 6) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            player1[j] = TFT[j];
+                        }
+                    }
 
+                    //Encode chromosome for player2
+                    if (sim == 0) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            player2[j] = TFT[j];
+                        }
+                    }
+                    if (sim == 1 || sim == 4) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            player2[j] = AllC[j];
+                        }
+                    }
+                    if (sim == 2 || sim == 5) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            player2[j] = AllD[j];
+                        }
+                    }
+                    if (sim == 3 || sim == 6) {
+                        for (int j = 0; j < chromosomes; j++) {
+                            double bit = Math.random();
+                            if (bit < 0.5)
+                                player2[j] = 0;
+                            else
+                                player2[j] = 1;
+                        }
+                    }
 
-            // Output
-            if (i%10==0)
-            {
-                System.out.println();
-                System.out.println("Generation " + i);
-                System.out.println("Population fitness = " + df.format(avgFitness));
-                System.out.println("Max individual fitness = " + df.format(fitness[best[0]]));
-                System.out.println("Elites:");
-                for (int print = 0; print < elite; print ++)
-                {
-                    System.out.println(best[print] + "\t" + df.format(fitness[best[print]]));
-                }
+                    String name1 = "";  //name of player 1
+                    String name2 = "";
 
-                outputFile.printf("%d\t%1.6e\t%1.6e\r\n",i,avgFitness,fitness[best[0]]);
-                currentBestAsList.printf("{");
-                for(int p = 0; p < chromosomes; p++)
-                    currentBestAsList.printf("%d,",solutions[best[0]][p]);
-                currentBestAsList.printf("}\n");
+                    //Name player1
+                    if (sim == 0 || sim == 1 || sim == 2 || sim == 3) {
+                        name1 = "BEST_STRATEGY";
+                    }
+                    if (sim == 4 || sim == 5 || sim == 6) {
+                        name1 = "TIT_FOR_TAT";
+                    }
 
-                currentBestAsArray.printf("\n");
-                for(int p = 0; p < chromosomes; p++)
-                {
-                    currentBestAsArray.printf("%d",solutions[best[0]][p]);
-                }
-                currentBestAsArray.printf("\n");
+                    //Name player2
+                    if (sim == 0) {
+                        name2 = "TIT_FOR_TAT";
+                    }
+                    if (sim == 1 || sim == 4) {
+                        name2 = "ALL_COOPERATE";
+                    }
+                    if (sim == 2 || sim == 5) {
+                        name2 = "ALL_DEFECT";
+                    }
+                    if (sim == 3 || sim == 6) {
+                        name2 = "RANDOM_STRATEGY";
+                    }
 
-                outputFile.flush();
-                currentBestAsList.flush();
-                currentBestAsArray.flush();
-            }
-        }
+                    //Official announce the name of the two players
+                    System.out.println("Player1: " + name1 + "\nPlayer2: " + name2);
 
-        System.out.print("\n\n");
+                    //start simulation
+                    boolean printmoves = true;
+                    simulation(player1, player2, name1, name2, printmoves);
 
-        for (int i = 0; i < population; i++)
-        {
-            printChromosome(solutions, i);
-        }
+                    //restart another simulation
+                    System.out.println("\n***** To simulate BEST STRATEGY against TIT FOR TAT, enter 0. ***** " +
+                            "\n***** To simulate BEST STRATEGY against All COOPERATE, enter 1. ***** " +
+                            "\n***** To simulate BEST STRATEGY against All DEFECT, enter 2. ***** " +
+                            "\n***** To simulate BEST STRATEGY against RANDOM STRATEGY, enter 3. ***** " +
+                            "\n***** To simulate TIT FOR TAT against All COOPERATE, enter 4. ***** " +
+                            "\n***** To simulate TIT FOR TAT against All DEFECT, enter 5. ***** " +
+                            "\n***** To simulate TIT FOR TAT against RANDOM STRATEGY, enter 6. ***** " +
+                            "\n***** To quit simulation, enter -1. ***** ");
 
-        System.out.print("\n\n");
-
-        for (int i = 0; i < population; i++)
-        {
-            System.out.print("player " + (i+1) + "\t");
-            System.out.println(df.format(fitness[i]));
-        }
-
-        System.out.print("\n\n");
-
-        System.out.println("Best strategy after " + generations + " generations:");
-        printChromosome(solutions,best[0]);
-        System.out.println("Has fitness " + df.format(fitness[best[0]]));
-
-        outputFile.close();
-        currentBestAsList.close();
-        currentBestAsArray.close();
-
-        System.out.print("\n\n");
-
-
-        //evaluate the winning rate of the best strategy against 1000 random strategies
-        System.out.println("Evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no.");
-        Scanner keyboard = new Scanner(System.in);
-        int winEval = keyboard.nextInt();
-
-        boolean printmoves = false;  //to tell the simulation method not to print all the moves
-
-        while (winEval == 1)
-        {
-            int numRounds = 1000;
-            int[] randStrat = new int[chromosomes]; //random strategy
-            int countWin = 0;                       //stores the number of rounds the best strategy wins
-            for (int index = 0; index < numRounds; index++)
-            {
-                for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
-                {
-                    double bit = Math.random();
-                    if (bit < 0.5)
-                        randStrat[j] = 0;
-                    else
-                        randStrat[j] = 1;
+                    sim = keyboard.nextInt();
                 }
 
-                boolean win;
-                //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
-                win = simulation(solutions[best[0]], randStrat, "BEST_STRATEGY", "RANDOM_STRATEGY", printmoves);
-
-                if (win == true) {
-                    countWin++;  //count the number of winning rounds
-                }
-
+                System.out.println("\nTo return to genetic algorithm, enter 0." +
+                        "\nTo exit the program, enter -1.");
+                option = keyboard.nextInt();
             }
-
-            //print the winning rate
-            System.out.println("\nWinning rate of best strategy: " + countWin + "/" +numRounds + "\n");
-
-            System.out.println("Re-evaluate winning rate of best strategy? Enter 1 for yes, and 0 for no.");
-            winEval = keyboard.nextInt();
-
-        }
-
-        System.out.println("\n");
-
-        //simulation
-        System.out.println("To simulate BEST STRATEGY against TIT FOR TAT, enter 0." +
-                        "\nTo simulate BEST STRATEGY against All COOPERATE, enter 1." +
-                        "\nTo simulate BEST STRATEGY against All DEFECT, enter 2." +
-                        "\nTo simulate BEST STRATEGY against RANDOM STRATEGY, enter 3." +
-                        "\nTo simulate TIT FOR TAT against All COOPERATE, enter 4." +
-                        "\nTo simulate TIT FOR TAT against All DEFECT, enter 5." +
-                        "\nTo simulate TIT FOR TAT against RANDOM STRATEGY, enter 6." +
-                        "\nTo quit simulation, enter -1.");
-
-        int sim = keyboard.nextInt();
-
-        while (sim == 0 || sim == 1 || sim == 2 || sim == 3 || sim == 4 || sim == 5 || sim == 6 )
-        {
-            int[] player1 = new int[chromosomes];
-            int[] player2 = new int[chromosomes];
-
-            //Encode chromosome for player1
-            if (sim == 0 || sim == 1 || sim == 2 || sim == 3)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    player1[j] = solutions[best[0]][j];
-                }
-            }
-            if (sim == 4 || sim == 5 || sim == 6)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    player1[j] = TFT[j];
-                }
-            }
-
-            //Encode chromosome for player2
-            if (sim == 0)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    player2[j] = TFT[j];
-                }
-            }
-            if (sim == 1 || sim == 4)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    player2[j] = AllC[j];
-                }
-            }
-            if (sim == 2 || sim == 5)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    player2[j] = AllD[j];
-                }
-            }
-            if (sim == 3 || sim == 6)
-            {
-                for (int j = 0; j < chromosomes; j++)
-                {
-                    double bit = Math.random();
-                    if (bit < 0.5)
-                        player2[j] = 0;
-                    else
-                        player2[j] = 1;
-                }
-            }
-
-            String name1 = "";  //name of player 1
-            String name2 = "";
-
-            //Name player1
-            if (sim == 0 || sim == 1 || sim == 2 || sim == 3)
-            {
-                name1 = "BEST_STRATEGY";
-            }
-            if (sim == 4 || sim == 5 || sim == 6)
-            {
-                name1 = "TIT_FOR_TAT";
-            }
-
-            //Name player2
-            if (sim == 0)
-            {
-                name2 = "TIT_FOR_TAT";
-            }
-            if (sim == 1 || sim == 4)
-            {
-                name2 = "ALL_COOPERATE";
-            }
-            if (sim == 2 || sim == 5)
-            {
-                name2 = "ALL_DEFECT";
-            }
-            if (sim == 3 || sim == 6)
-            {
-                name2 = "RANDOM_STRATEGY";
-            }
-
-            //Official announce the name of the two players
-            System.out.println("Player1: " + name1 +"\nPlayer2: " + name2);
-
-            //start simulation
-            printmoves = true;
-            simulation(player1, player2, name1, name2, printmoves);
-
-            //restart another simulation
-            System.out.println("\n\nTo simulate BEST STRATEGY against TIT FOR TAT, enter 0." +
-                    "\nTo simulate BEST STRATEGY against All COOPERATE, enter 1." +
-                    "\nTo simulate BEST STRATEGY against All DEFECT, enter 2." +
-                    "\nTo simulate BEST STRATEGY against RANDOM STRATEGY, enter 3." +
-                    "\nTo simulate TIT FOR TAT against All COOPERATE, enter 4." +
-                    "\nTo simulate TIT FOR TAT against All DEFECT, enter 5." +
-                    "\nTo simulate TIT FOR TAT against RANDOM STRATEGY, enter 6." +
-                    "\nTo quit simulation, enter -1.");
-
-            sim = keyboard.nextInt();
         }
     }
 
+
+
+
+
+    //when boolean printmoves is false, the method "simulation" only returns whether the game is won or not.
+    //when boolean printmoves is true, the method "simulation" also acts as a simulator by printing all moves and scores.
     public static boolean simulation(int[] player1, int[] player2, String name1, String name2, boolean printmoves)
     {
         boolean win = false;
+
+        int countD = 0;
+        double percentageD;
+
+        for (int j = 0; j < chromosomes; j++)
+        {
+            if (player2[j] == 0)
+            {
+                countD++;
+            }
+        }
+
+        percentageD = (double)countD/chromosomes;
 
         if (printmoves==true)
         {
@@ -521,7 +632,7 @@ public class PrisonersDilemma
         int[] history2 = new int[6]; //history for player2
         /*
 				The 6 integers in the array "history" represent (in order):
-				player's first move, opponent's second move
+				player's first move, opponent's first move
 				player's second move, opponent's second move
 				player's third move, opponent's third move
 		*/
@@ -628,12 +739,21 @@ public class PrisonersDilemma
         //print the final score of each player over the max score each can obtain
         if (printmoves==true)
         {
-            System.out.println("\n Scores for " + name1 + " vs " + name2 +": \n"
-                    + name1 + ": " + scoreplayer1 + "/" + (movesTotal*6)
-                    +"\n"  + name2 + ": " + scoreplayer2 + "/" + (movesTotal*6));
+            System.out.println("\n Scores for " + name1 + " vs " + name2 +
+                             ": \n" + name1 + ": " + scoreplayer1 + " points"
+                             +"\n"  + name2 + ": " + scoreplayer2 + " points"
+                             +"\nSum of the two players's scores: " + (scoreplayer1+scoreplayer2) + "/" + (movesTotal*6)
+                            + " (Ideal case: 600/600. Would mean that both players cooperated at each of the 100 games)");
         }
 
-        if (scoreplayer1 >= scoreplayer2)
+        //See section F (definition of winning part 1) in readme.md
+        if ( (scoreplayer1+scoreplayer2)>=400 && (Math.abs(scoreplayer1 - scoreplayer2) <= 5)  )
+        {
+            win = true;
+        }
+
+        //See section H (definition of winning part 2) in readme.md
+        if ( percentageD>0.65 && (Math.abs(scoreplayer1 - scoreplayer2) <= 5)  )
         {
             win = true;
         }
@@ -642,106 +762,70 @@ public class PrisonersDilemma
 
     }
 
+
+
+
+
+
     public static void fitness()
     {
-        //Evaluate score
-        score();
-
-        double maxScorePlayer = rounds * movesTotal * 5.0; //maximum score that each player can get in a generation (max 5 pts at every move)
-
+        //re-initialize fitness of all population to 0
         for (int i = 0; i < population; i++)
         {
-            fitness[i] = score[i]/maxScorePlayer;
+            fitness[i] = 0;
         }
 
-    }
-
-    public static void score()
-    {
-        //re-initialize score of all population to 0
-
-        for (int i = 0; i < population; i++)
+        for (int player = 0; player<population; player++)
         {
-            score[i] = 0;
-        }
-
-        //each player plays a round with every other player in the population
-        // -1 stands for no history, 0 for defect, 1 for cooperate
-        for (int player1 = 0; player1<population; player1++)
-        {
-            for (int player2 = player1+1; player2<population; player2++)
+            boolean printmoves = false;  //to tell the simulation method not to print all the moves
+            int[] randStrat = new int[chromosomes]; //random strategy
+            int countWin = 0;                       //stores the number of rounds the best strategy wins
+            for (int index = 0; index < rounds; index++)
             {
-                int[] history1 = new int[6]; //history for player1
-                int[] history2 = new int[6]; //history for player2
-				/*
-				The 6 integers in the array "history" represent (in order):
-				player's first move, opponent's second move
-				player's second move, opponent's second move
-				player's third move, opponent's third move
-				*/
-
-                //at the beginning of a round, initialize all history to no history(-1)
-                for (int i=0; i<6; i++)
+                if (Math.random() < 0.1)
                 {
-                    history1[i] = -1; //history for player1
-                    history2[i] = -1; //history for player2
+                    for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+                    {
+                        randStrat[j] = AllD[j];
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < chromosomes; j++) //re-initialize random strategy
+                    {
+                        double bit = Math.random();
+                        if (bit < 0.5)
+                            randStrat[j] = 0;
+                        else
+                            randStrat[j] = 1;
+                    }
                 }
 
-                for (int moves = 0; moves < movesTotal; moves++)
-                {
-                    int genePlayer1 = situation(history1);
-                    int genePlayer2 = situation(history2);
-                    int movePlayer1 = solutions[player1][genePlayer1];
-                    int movePlayer2 = solutions[player2][genePlayer2];
 
-                    //Update history after player1 and player2 both make moves
-                    for (int i=0; i<4; i++)
-                    {
-                        history1[i] = history1[i+2];
-                        history2[i] = history2[i+2];
-                    }
-                    history1[4] = movePlayer1;
-                    history1[5] = movePlayer2;
-                    history2[4] = movePlayer2;
-                    history2[5] = movePlayer1;
+                boolean win;
+                //System.out.println("Round " + (index+1) + ": ");  IGNORE THIS LINE, I'M KEEPING IT JUST IN CASE
+                win = simulation(solutions[player], randStrat, "", "", printmoves);
 
-
-					/*
-						Update the scores
-						If both cooperate, +3 for both. If both defect, +1 for both.
-						If one cooperates and one defects, +0 for the one who cooperates and +5 for the one who defects.
-					*/
-
-                    if (movePlayer1==1 && movePlayer2==1) //if both cooperate
-                    {
-                        score[player1] += 3;
-                        score[player2] += 3;
-                    }
-                    else if (movePlayer1==0 && movePlayer2==0) //if both defect
-                    {
-                        score[player1] += 1;
-                        score[player2] += 1;
-                    }
-                    else if (movePlayer1==1 && movePlayer2==0) //if player1 cooperates and player2 defects
-                    {
-                        score[player1] += 0;
-                        score[player2] += 5;
-                    }
-                    else if (movePlayer1==0 && movePlayer2==1) //if player1 defects and player2 cooperates
-                    {
-                        score[player1] += 5;
-                        score[player2] += 0;
-                    }
+                if (win == true) {
+                    countWin++;  //count the number of winning rounds
                 }
             }
+
+            //print the winning rate
+            fitness[player] = (double) countWin / rounds;
         }
     }
+
+
+
+
+
 
     public static int situation(int[] history) //gives the gene number
     {
 		/*
 			Reminder: 
-			history[0] == player's first move, history[1] == opponent's second move
+			history[0] == player's first move, history[1] == opponent's first move
 			history[2] == player's second move, history[3] == opponent's second move
 			history[4] == player's third move, history[5] == opponent's third move
 		*/
@@ -807,6 +891,10 @@ public class PrisonersDilemma
         return situation;
     }
 
+
+
+
+
     //The rouletteWheel() method selects next parents based on fitness.
     public static int[] rouletteWheel(double minFitness)
     {
@@ -851,6 +939,11 @@ public class PrisonersDilemma
 
         return indices;
     }
+
+
+
+
+
 
     public static void printChromosome(int[][] array, int index)
     {
